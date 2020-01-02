@@ -4,10 +4,20 @@ from urllib.parse import urljoin
 
 import pytz
 import requests
-from flask import Flask
+from flask import Blueprint, Flask
 from jinja2 import Environment, PackageLoader
 
-app = Flask(__name__)
+
+def create_app():
+    app = Flask(__name__.split(".")[0])
+    register_blueprints(app)
+    return app
+
+
+def register_blueprints(app):
+    app.register_blueprint(train_dashboard)
+
+
 env = Environment(loader=PackageLoader("betrain", "templates"), autoescape=True)
 
 
@@ -70,7 +80,10 @@ class TrainConnection:
         return self.departure_delay > 0
 
 
-@app.route("/")
-def train_dashboard():
+train_dashboard = Blueprint("train_dasboard", __name__)
+
+
+@train_dashboard.route("/")
+def train_dashboard_view():
     connections = IRailApi.fetch_connection()
     return env.get_template("dashboard.html").render(connections=connections)
